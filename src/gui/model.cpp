@@ -473,20 +473,20 @@ bool Model::begin_extrude(std::string& err) {
 
     auto sel = selected_element();
     if(!sel.has_value()) return false;
-    std::optional<Halfedge_Mesh::ElementRef> ref, ref2;
+    std::optional<Halfedge_Mesh::ElementRef> ref;
     Halfedge_Mesh::FaceRef f;
     my_mesh->copy_to(old_mesh);
     auto new_obj = std::visit(overloaded{[&](Halfedge_Mesh::FaceRef face) {
                               beveling = Bevel::face;
-                              ref2 = my_mesh->bevel_face(face);
-                              return ref2;
+                              ref = my_mesh->bevel_face(face);
+                              return ref;
 
 
                           },
                           [&](Halfedge_Mesh::VertexRef vert) {
                               beveling = Bevel::vert;
-                              ref2 = my_mesh->extrude_vertex(vert);
-                              return ref2;
+                              ref = my_mesh->extrude_vertex(vert);
+                              return ref;
 
                           },
                           [&](auto) -> std::optional<Halfedge_Mesh::ElementRef> { return std::nullopt; }},
