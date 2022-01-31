@@ -927,6 +927,10 @@ void Manager::UIsettings() {
     ImGui::Begin("Settings", &settings_shown,
                  ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
 
+    // TODO How can we use this checkbox to set this flag for all cameras?
+    //ImGui::Text("Camera");
+    //ImGui::Checkbox("Flip Vertical Rotation", &TODO);
+
     ImGui::Text("Scene Importer");
     ImGui::Checkbox("Drop Normals", &load_opt.drop_normals);
     ImGui::Checkbox("Join Identical Vertices", &load_opt.join_verts);

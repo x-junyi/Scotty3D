@@ -56,6 +56,9 @@ public:
     float get_fov() const;
     float get_h_fov() const;
     float get_near() const;
+    
+    // swap orbit behavior for vertical mouse motion
+    bool orbit_flip_vertical = false;
 
 private:
     void update_pos();

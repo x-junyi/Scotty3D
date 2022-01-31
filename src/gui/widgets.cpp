@@ -197,6 +197,10 @@ Pose Widgets::apply_action(const Pose& pose) {
         Vec2 off = bevel_start - bevel_end;
         result.pos = 2.0f * Vec3(off.x, -off.y, 0.0f);
     } break;
+    case Widget_Type::extrude: {
+        Vec2 off = bevel_start - bevel_end;
+        result.pos = 2.0f * Vec3(off.x, -off.y, 0.0f);
+    } break;
     default: assert(false);
     }
 
@@ -315,7 +319,7 @@ void Widgets::start_drag(Vec3 pos, Vec3 cam, Vec2 spos, Vec3 dir) {
             drag_end = Vec3{1.0f};
         }
 
-        if(active != Widget_Type::bevel) generate_lines(pos);
+        if(active != Widget_Type::bevel && active != Widget_Type::extrude) generate_lines(pos);
     }
 }
 
@@ -334,7 +338,7 @@ void Widgets::drag_to(Vec3 pos, Vec3 cam, Vec2 spos, Vec3 dir, bool scale_invert
     Vec3 norm;
     norm[(int)axis] = 1.0f;
 
-    if(active == Widget_Type::bevel) {
+    if(active == Widget_Type::bevel || active == Widget_Type::extrude) {
 
         bevel_end = spos;
 

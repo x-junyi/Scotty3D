@@ -71,6 +71,14 @@ std::optional<Halfedge_Mesh::VertexRef> Halfedge_Mesh::collapse_face(Halfedge_Me
 }
 
 /*
+    Insets a vertex into the given face, returning a pointer to the new center vertex
+*/
+std::optional<Halfedge_Mesh::VertexRef> Halfedge_Mesh::inset_vertex(FaceRef f) {
+    (void)f;
+    return std::nullopt;
+}
+
+/*
     This method should flip the given edge and return an iterator to the
     flipped edge.
 */
@@ -88,6 +96,32 @@ std::optional<Halfedge_Mesh::EdgeRef> Halfedge_Mesh::flip_edge(Halfedge_Mesh::Ed
 std::optional<Halfedge_Mesh::VertexRef> Halfedge_Mesh::split_edge(Halfedge_Mesh::EdgeRef e) {
 
     (void)e;
+    return std::nullopt;
+}
+
+/* 
+    This method splits the given edge in half, but does not split the
+    adjacent faces. Returns an iterator to the new vertex which splits
+    the original edge.
+*/
+std::optional<Halfedge_Mesh::VertexRef> Halfedge_Mesh::bisect_edge(EdgeRef e) {
+
+    (void)e;
+    return std::nullopt;
+}
+
+std::optional<Halfedge_Mesh::FaceRef> Halfedge_Mesh::inset_face(Halfedge_Mesh::FaceRef f) {
+
+    // hint: use bevel_face positions as a helper function here
+    (void)f;
+    return std::nullopt;
+}
+
+/*
+    Bevels a vertex and inserts a vertex into the new vertex, returning a pointer to that vertex
+*/
+std::optional<Halfedge_Mesh::VertexRef> Halfedge_Mesh::extrude_vertex(VertexRef v) {
+    (void)v;
     return std::nullopt;
 }
 
@@ -192,6 +226,14 @@ void Halfedge_Mesh::bevel_vertex_positions(const std::vector<Vec3>& start_positi
     (void)start_positions;
     (void)face;
     (void)tangent_offset;
+}
+
+/*
+    Updates the position of v using the given start_position
+*/
+void Halfedge_Mesh::extrude_vertex_position(const Vec3& start_positions, Halfedge_Mesh::FaceRef face) {
+    (void)start_positions;
+    (void)face;
 }
 
 /*

@@ -17,18 +17,18 @@ permalink: /pathtracer/camera_rays
 ---
 
 ## Step 1: `Pathtracer::trace_pixel`
-The job of this function is to compute the amount of energy arriving at this pixel of the image. Take a look at `Pathtracer::trace_pixel` in `student/pathtracer.cpp`.  Conveniently, we've given you a function `Pathtracer::trace(r)` that provides a measurement of incoming scene radiance along the direction given by ray `r`, split into emissive and reflected components. See `lib/ray.h` for the interface of ray.
+Take a look at `Pathtracer::trace_pixel` in `student/pathtracer.cpp`. The job of this function is to compute the amount of energy arriving at this pixel of the image. Conveniently, we've given you a function `Pathtracer::trace(r)` that provides a measurement of incoming scene radiance along the direction given by ray `r`, split into emissive (direct) and reflected (indirect) components. See `lib/ray.h` for the interface of ray.
 
 Given the width and height of the screen, and a point's _screen space_ coordinates (`size_t x, size_t y`), compute the point's _normalized_ ([0-1] x [0-1]) screen space coordinates in `Pathtracer::trace_pixel`. Pass these coordinates to the camera via `Camera::generate_ray` in `camera.cpp` (note that `Camera::generate_ray` accepts a `Vec2` object as its input argument)
 
 ## Step 2: `Camera::generate_ray`
-Implement `Camera::generate_ray`. This function should return a ray **in world space** that reaches the given sensor sample point, i.e. the input argument. Compute this ray in **camera space** (where the camera pinhole is at the origin, the camera is looking down the -Z axis, and +Y is at the top of the screen.). In `util/camera.h`, the `Camera` class stores `vert_fov` and `aspect_ratio` indicating the vertical field of view of the camera (in degrees, not radians) as well as the aspect ratio.
+Implement `Camera::generate_ray`. This function should return a ray **in world space** that reaches the given sensor sample point, i.e. the input argument. We recommend that you compute this ray in camera space (where the camera pinhole is at the origin, the camera is looking down the -Z axis, and +Y is at the top of the screen.). In `util/camera.h`, the `Camera` class stores `vert_fov` and `aspect_ratio` indicating the vertical field of view of the camera (in degrees, not radians) as well as the aspect ratio. Note that the camera maintains camera-space-to-world space transform matrix `iview` that will come in handy. Note that since `iview` is a transform matrix, it contains translation, rotation, and scale factors. Be careful in how you use it directly on specific objects, and take a look at `lib/ray.h` and `lib/mat4.h` to see what functions are available for the `Ray` and `Mat4` objects.
 
 <center><img src="images/camera_coordinate_system.png" ></center>
 
-Note that the camera maintains camera-space-to-world space transform matrix `iview` that you will need to use in order to get the new ray back into **world space**. Note that since `iview` is a transform matrix, it contains translation, rotation, and scale factors. Be careful in how you use it on specific objects, and take a look at `lib/ray.h` and `lib/mat4.h` to see what functions are available for the `Ray` and `Mat4` objects.
+Note that the camera maintains camera-space-to-world space transform matrix `iview` that you will need to use in order to get the new ray back into **world space**.
 
-Once you have implemented `Pathtracer::trace_pixel`, `Rect::sample` and `Camera::generate_ray`ou should now have a camera that can shoot rays into the scene! See the
+Once you have implemented `Pathtracer::trace_pixel`, `Rect::Uniform::sample` and `Camera::generate_ray`ou should now have a camera that can shoot rays into the scene! See the
 **Raytracing Visualization** below to confirm this.
 
 ## Step 3: `Pathtracer::trace_pixel` &#8594; Super-sampling
@@ -36,7 +36,7 @@ Your implementation of `Pathtracer::trace_pixel` must support super-sampling. Th
 
 To choose a sample within the pixel, you should implement `Rect::sample` (see `src/student/samplers.cpp`), such that it provides (random) uniformly distributed 2D points within the rectangular region specified by the origin and the member `Rect::size`. Then you may then create a `Rect` sampler with a one-by-one region and call `sample()` to obtain randomly chosen offsets within the pixel.
 
----
+Once you have implemented `Pathtracer::trace_pixel`, `Rect::sample` and `Camera::generate_ray`, you should have a working camera (see **Raytracing Visualization** section below to confirm that your camera is indeed working).
 
 ### Tips
 

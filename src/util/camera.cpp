@@ -56,7 +56,11 @@ void Camera::reset() {
 
 void Camera::mouse_orbit(Vec2 off) {
     float up_rot = -off.x * orbit_sens;
-    float right_rot = off.y * orbit_sens;
+    float right_rot = -off.y * orbit_sens;
+
+    if( orbit_flip_vertical ) {
+       right_rot = -right_rot;
+    }
 
     Vec3 up = rot.rotate(UP);
     Vec3 f = front();
