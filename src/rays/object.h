@@ -114,7 +114,7 @@ private:
     bool has_trans = false;
     Mat4 trans, itrans;
     int material = -1;
-    Scene_ID _id = -1;
+    Scene_ID _id = 0;
     std::variant<Tri_Mesh, Shape, BVH<Object>, List<Object>> underlying;
 };
 
