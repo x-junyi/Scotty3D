@@ -443,94 +443,75 @@ bool Model::begin_bevel(std::string& err) {
                    [&](auto) -> std::optional<Halfedge_Mesh::FaceRef> { return std::nullopt; }},
         *sel);
 
-    if(!new_face.has_value()) return false;
-    Halfedge_Mesh::FaceRef face = new_face.value();
-
     err = validate();
-    if(!err.empty()) {
-
+    if(!err.empty() || !new_face.has_value()) {
         *my_mesh = std::move(old_mesh);
         return false;
+    } 
 
-    } else {
+    Halfedge_Mesh::FaceRef face = new_face.value();
 
-        my_mesh->render_dirty_flag = true;
-        set_selected(face);
+    my_mesh->render_dirty_flag = true;
+    set_selected(face);
 
-        trans_begin = {};
-        auto h = face->halfedge();
-        trans_begin.center = face->center();
-        do {
-            trans_begin.verts.push_back(h->vertex()->pos);
-            h = h->next();
-        } while(h != face->halfedge());
+    trans_begin = {};
+    auto h = face->halfedge();
+    trans_begin.center = face->center();
+    do {
+        trans_begin.verts.push_back(h->vertex()->pos);
+        h = h->next();
+    } while(h != face->halfedge());
 
-        return true;
-    }
+    return true;
 }
 
 bool Model::begin_extrude(std::string& err) {
 
     auto sel = selected_element();
     if(!sel.has_value()) return false;
-    std::optional<Halfedge_Mesh::ElementRef> ref;
     Halfedge_Mesh::FaceRef f;
     my_mesh->copy_to(old_mesh);
-    auto new_obj = std::visit(overloaded{[&](Halfedge_Mesh::FaceRef face) {
+    
+    std::optional<Halfedge_Mesh::ElementRef> new_obj = std::visit(overloaded{[&](Halfedge_Mesh::FaceRef face) {
                               beveling = Bevel::face;
-                              ref = my_mesh->bevel_face(face);
-                              return ref;
-
-
+                              return std::optional<Halfedge_Mesh::ElementRef>{my_mesh->bevel_face(face)};
                           },
                           [&](Halfedge_Mesh::VertexRef vert) {
                               beveling = Bevel::vert;
-                              ref = my_mesh->extrude_vertex(vert);
-                              return ref;
-
+                              return std::optional<Halfedge_Mesh::ElementRef>{my_mesh->extrude_vertex(vert)};
                           },
                           [&](auto) -> std::optional<Halfedge_Mesh::ElementRef> { return std::nullopt; }},
                *sel);
 
-    if(!new_obj.has_value()) return false;
+    err = validate();
+    if(!err.empty() || !new_obj.has_value()) {
+        *my_mesh = std::move(old_mesh);
+        return false;
+    }
     Halfedge_Mesh::ElementRef elem = new_obj.value();
+
     return std::visit(overloaded{[&](Halfedge_Mesh::VertexRef vert) {
-                            err = validate();
-                            if(!err.empty()) {
-                                *my_mesh = std::move(old_mesh);
-                                return false;
-                            } else {
-                                my_mesh->render_dirty_flag = true;
-                                set_selected(vert);
-                                trans_begin = {};
-                                trans_begin.verts.push_back(vert->pos);
-                                return true;
-                            }
+                            my_mesh->render_dirty_flag = true;
+                            set_selected(vert);
+                            trans_begin = {};
+                            trans_begin.verts.push_back(vert->pos);
+                            return true;
                         },
                         [&](Halfedge_Mesh::FaceRef face) {
-                            err = validate();
-                            if(!err.empty()) {
+                            my_mesh->render_dirty_flag = true;
+                            set_selected(face);
 
-                                *my_mesh = std::move(old_mesh);
-                                return false;
+                            trans_begin = {};
+                            auto h = face->halfedge();
+                            trans_begin.center = face->center();
+                            do {
+                                trans_begin.verts.push_back(h->vertex()->pos);
+                                h = h->next();
+                            } while(h != face->halfedge());
 
-                            } else {
-
-                                my_mesh->render_dirty_flag = true;
-                                set_selected(face);
-
-                                trans_begin = {};
-                                auto h = face->halfedge();
-                                trans_begin.center = face->center();
-                                do {
-                                    trans_begin.verts.push_back(h->vertex()->pos);
-                                    h = h->next();
-                                } while(h != face->halfedge());
-
-                                return true;
-                            }
+                            return true;
                         },
-                        [&](auto) -> bool { return false; }},
+                        [](auto) -> bool { return false; }},
                 elem);
 }
 
