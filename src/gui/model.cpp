@@ -587,10 +587,9 @@ std::string Model::update_mesh(Undo& undo, Scene_Object& obj, Halfedge_Mesh&& be
 
     unsigned int id = Halfedge_Mesh::id_of(ref);
     std::optional<Halfedge_Mesh::ElementRef> new_ref = op(*my_mesh, ref);
-    if(!new_ref.has_value()) return {};
 
     auto err = validate();
-    if(!err.empty()) {
+    if(!err.empty() || !new_ref.has_value()) {
         obj.take_mesh(std::move(before));
     } else {
         my_mesh->render_dirty_flag = true;
