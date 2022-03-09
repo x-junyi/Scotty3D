@@ -5,4 +5,3 @@ plugins:
   - jekyll-remote-theme
 logo: '/assets/spot.png'
 favicon: 'assets/favicon.ico'
-markdown: kramdown

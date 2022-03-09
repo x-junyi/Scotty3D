@@ -17,7 +17,6 @@ The only difference between Catmull-Clark and [linear](../linear) subdivision is
 2.  setting the new vertex position at each edge e to the average of the new adjacent face positions (from step 1) **and** the original edge endpoint positions, and
 3.  setting the new vertex position at each vertex v to the weighted sum
 
-$$\frac{Q+2R+(n-3)S}{n}$$
 
 <center><img src="catmull_clark_positions.png" style="height:80px"></center>
 
