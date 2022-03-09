@@ -18,7 +18,7 @@ The basic idea behind the halfedge data structure is that, in addition to the us
 
 <center><img src="halfedge_pointers.png" style="height:240px"></center>
 
-In particular, there are two halfedges associated with each edge (see picture above). For an edge connecting two vertices i and j, one of its halfedges points from i to j; the other one points from j to i. In other words, we say that the two halfedges are _oppositely oriented_. One of the halfedges is associated with the face to the "left" of the edge; the other is associated with the face to the "right." Each halfedge knows about the opposite halfedge, which we call its _twin_. It also knows about the _next_ halfedge around its face, as well as its associated edge, face, and vertex.
+In particular, there are two halfedges associated with each edge (see picture above). For an edge connecting two vertices i and j, one of its halfedges points from i to j; the other one points from j to i. In other words, we say that the two halfedges are _oppositely oriented_. One of the halfedges is associated with the face to the "left" of the edge; the other is associated with the face to the "right." Each halfedge knows about the opposite halfedge, which we call its _twin_. It also knows about the _next_ halfedge around its face, as well as its associated edge, face, and root vertex.
 
 In contrast, the standard mesh elements (vertices, edges, and faces) know only about _one_ of their halfedges. In particular:
 

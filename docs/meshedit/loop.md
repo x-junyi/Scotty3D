@@ -23,7 +23,7 @@ And the following picture illustrates the weighted average:
 
 ![Loop subdivision weights](loop_weights.png)
 
-Note that the above image has **two separate formualas**.
+Note that the above image has **two separate formualas**.\
 On the right side, the new position of an **old vertex** is (1 - nu) times the old position + u times the sum of the positions of all of its neighbors. \
 On the left side, the new position for a **newly created vertex v** that splits Edge AB and is flanked by opposite vertices C and D across the two faces connected to AB in the original mesh will be 3/8 * (A + B) + 1/8 * (C + D). \
 If we repeatedly apply these two steps, we will converge to a fairly smooth approximation of our original mesh.

@@ -18,7 +18,7 @@ The methods that update geometry are `HalfedgeMesh::bevel_vertex_positions`, `Ha
 
 `HalfedgeMesh::extrude_vertex` will update both connectivity and geometry, as it should first perform a flat bevel on the vertex, and then insert a vertex into the new face. 
 
-The methods for updating connectivity can be implemented following the general strategy outlined in [edge flip tutorial](../meshedit/edge_flip.md). **Note that the methods that update geometry will be called repeatedly for the same bevel, in order to adjust positions according to user mouse input. See the gif in the [User Guide](/Scotty3D/guide/model_mode) for a demonstration on how the mouse's movement affects the positioning.**
+The methods for updating connectivity can be implemented following the general strategy outlined in [edge flip tutorial](/Scotty3D/meshedit/local/edge_flip). **Note that the methods that update geometry will be called repeatedly for the same bevel, in order to adjust positions according to user mouse input. See the gif in the [User Guide](/Scotty3D/guide/model_mode) for a demonstration on how the mouse's movement affects the positioning.**
 
 To update the _geometry_ of a beveled element, you are provided with the following data:
 
@@ -65,8 +65,8 @@ From here, you will need to compute new coordinates for vertex `i`, which can be
 The only question remaining is: where _should_ you put the beveled vertex? **We will leave this decision up to you.** This question is one where you will have to think a little bit about what a good design would be. Questions to ask yourself:
 
 *   How do I compute a point that is inset from the original geometry?
-*   For faces, how do I shift the geometry in the normal direction? (You may wish to try the method `Face::normal()` here or think of another way to compute the face's normal.)
-*   Similarly, how should we compute the tangent vector which we must inset in the direction of? (What directions would make sense for a vertex to be shifted?)
+*   For faces, how do I shift the geometry in the normal direction? You may wish to try the method `Face::normal()` here or think of another way to compute the face's normal. (What directions would make sense for a vertex to be shifted when we move our mouse up and down?)
+*   Similarly, how should we compute the tangent vector which we must inset in the direction of? (What directions would make sense for a vertex to be shifted when we move our mouse left and right?)
 *   What should I do as the offset geometry starts to look degenerate, e.g., shrinks to a point, or goes outside some reasonable bounds?
 *   What should I do when the geometry is nonplanar?
 *   Etc.
