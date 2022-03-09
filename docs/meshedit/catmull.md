@@ -18,7 +18,7 @@ The only difference between Catmull-Clark and [linear](../linear) subdivision is
 3.  setting the new vertex position at each vertex v to the weighted sum
 
 
-<center><img src="catmull_clark_positions.png" style="height:80px"></center>
+<center>$$\frac{Q+2R+(n-3)S}{n}$$</center>
 
 
 where _n_ is the degree of vertex _v_ (i.e., the number of faces containing _v_), and
