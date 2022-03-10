@@ -12,7 +12,7 @@ usemathjax: true
 Here we provide some additional detail about the bevel operations and their implementation in Scotty3D. Each bevel operation has two components:
 
 1.  A method that modifies the _connectivity_ of the mesh, creating new beveled elements, and
-2.  A method the updates the _geometry_ of the mesh, insetting and offseting the new vertices according to the user input.
+2.  A method that updates the _geometry_ of the mesh, insetting and offseting the new vertices according to the user input.
 
 The methods that update the connectivity are `HalfedgeMesh::bevel_vertex`, `halfedgeMesh::bevel_edge`, and `HalfedgeMesh::bevel_face`. \
 The methods that update geometry are `HalfedgeMesh::bevel_vertex_positions`, `HalfedgeMesh::extrude_vertex_position`, `HalfedgeMesh::bevel_edge_positions`, and `HalfedgeMesh::bevel_face_positions`.
@@ -61,7 +61,7 @@ A useful trick here is _modular arithmetic_: since we really have a "loop" of ve
 
 From here, you will need to compute new coordinates for vertex `i`, which can be accessed from `new_halfedges[i]->vertex()->pos`. As a "dummy" example (i.e., this is NOT what you should actually do!!) this code will set the position of the new vertex to the average of the vertices above:
 
-    new_halfedges[i].vertex()->pos = ( pa + pb + pc ) / 3.; // replace with something that actually makes sense!
+    new_halfedges[i]->vertex()->pos = ( pa + pb + pc ) / 3.; // replace with something that actually makes sense!
 
 The only question remaining is: where _should_ you put the beveled vertex? **We will leave this decision up to you.** This question is one where you will have to think a little bit about what a good design would be. Questions to ask yourself:
 

@@ -30,7 +30,7 @@ On the right side, the new position of an **old vertex** is the following:
  
 $$ v_{new} = (1 - nu) \cdot v_{old} + u \cdot \sum v_{neighbor}$$
 
-On the left side, the new position of a **newly created vertex v** that splits Edge $$AB$$ and is flanked by opposite vertices $$C$$ and $$D$$ across the two faces connected to $$AB$$ in the original mesh is the following:
+On the left side, the new position of a **newly created vertex v** that splits the old Edge $$AB$$ and is flanked by old opposite vertices $$C$$ and $$D$$ across the two faces connected to $$AB$$ in the original mesh is the following:
 
 $$ v_{new} = \frac{3}{8} \cdot (A + B) + \frac{1}{8} \cdot (C + D). $$
 

@@ -85,7 +85,7 @@ Likewise, to delete a vertex we can write
 
     erase(v);
 
-Note, however, that one should be **very, very careful** when adding or deleting mesh elements. New mesh elements must be properly linked to the mesh -- for instance, this new vertex must be pointed to one of its associated halfedges by writing something like
+Note, however, that one should be **very, very careful** when adding or deleting mesh elements. New mesh elements must be properly linked to the mesh and initialized -- for instance, this new vertex must be pointed to one of its associated halfedges by writing something like
 
     v->halfedge() = h;
 
