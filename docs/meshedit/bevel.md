@@ -4,6 +4,7 @@ title: "Bevelling"
 permalink: /meshedit/local/bevel/
 parent: "Local Operations"
 grand_parent: "A2: MeshEdit"
+usemathjax: true
 ---
 
 # Beveling
@@ -38,7 +39,7 @@ The reason for storing `new_halfedges` and `start_positions` in an array is that
 
 <center><img src="bevel_diagram.png"></center>
 
-A useful trick here is _modular arithmetic_: since we really have a "loop" of vertices, we want to make sure that indexing the next element (+1) and the previous element (-1) properly "wraps around." This can be achieved via code like
+A useful trick here is _modular arithmetic_: since we really have a "loop" of vertices, we want to make sure that indexing the next element $$(+1)$$ and the previous element $$(-1)$$ properly "wraps around." This can be achieved via code like
 
     // Get the number of vertices in the new polygon
     int N = (int)hs.size();
