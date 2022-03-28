@@ -3,11 +3,12 @@ layout: default
 title: (Task 4) Path Tracing
 permalink: /pathtracer/path_tracing
 parent: "A3: Pathtracer"
+usemathjax: true
 ---
 
 # (Task 4) Path Tracing
 
-Up to this point, your renderer has only computed object visibility using ray tracing. Now, we will simulate the complicated paths that light can take throughout the scene, bouncing off many surfaces before eventually reaching the camera. Simulating this multi-bounce light is referred to as _global illumination_, and it is critical for producing realistic images, especially when specular surfaces are present.
+Up to this point, your renderer has only computed object visibility using ray tracing. Now, we will simulate the complicated paths that light can take throughout the scene, bouncing off many surfaces before eventually reaching the camera. Simulating this multi-bounce light is referred to as _global illumination_, and it is critical for producing realistic images, especially when specular surfaces are present. Note that all functions in `bsdf.cpp` are in **local space** to the surface with respect to the ray intersection point, while functions in `pathtracer.cpp` are generally in **world space**.
 
 ---
 
@@ -31,8 +32,8 @@ Note: a variety of sampling functions are provided in `student/samplers.cpp`. Th
 
 In this function, you will estimate light that bounced off at least one other surface before reaching our shading point. This is called _indirect_ lighting.
 
-- (1) Randomly sample a new ray direction from the BSDF distribution using BSDF::scatter().
-- (2) Create a new world-space ray and call Pathtracer::trace() to get incoming light. You should modify time_bounds so that the ray does not intersect at time = 0. Remember to set the new depth value.
+- (1) Randomly sample a new ray direction from the BSDF distribution using `BSDF::scatter()`.
+- (2) Create a new world-space ray and call `Pathtracer::trace()` to get incoming light. You should modify `Ray::dist_bounds` so that the ray does not intersect at time = 0. Remember to set the new depth value.
 - (3) Compute Monte Carlo estimate of incoming _indirect_ light scaled by BSDF attenuation.
 
 ## Step 4: `Pathtracer::sample_direct_lighting`

@@ -5,6 +5,7 @@ permalink: /pathtracer/materials
 parent: "A3: Pathtracer"
 has_children: false
 has_toc: false
+usemathjax: true
 ---
 
 # (Task 5) Materials
@@ -33,11 +34,15 @@ To complete the mirror and glass materials, you will only need to implement thei
 
 - `Vec3 reflect(Vec3 dir)`: returns a direction that is the **perfect specular reflection** of `dir` about `{0, 1, 0}`. More detail about specular reflection can be found [here](http://15462.courses.cs.cmu.edu/fall2015/lecture/reflection/slide_028).
 
-- `Vec3 refract(Vec3 out_dir, float index_of_refraction, bool& was_internal)`: returns the ray that results from refracting `out_dir` through the surface according to [Snell's Law](http://15462.courses.cs.cmu.edu/fall2015/lecture/reflection/slide_032). Your implementation should assume that when `in_dir` **enters** the surface (that is, if `cos(theta_out) > 0`) then the ray was previously travelling in a vacuum (i.e. index of refraction = 1.0). If `cos(theta_out) < 0`, then `in_dir` is **leaving** the surface and entering a vacuum.
+- `Vec3 refract(Vec3 out_dir, float index_of_refraction, bool& was_internal)`: returns the ray that results from refracting `out_dir` through the surface according to [Snell's Law](http://15462.courses.cs.cmu.edu/fall2015/lecture/reflection/slide_032). Your implementation should assume that when `in_dir` **enters** the surface (that is, if $$\cos(\theta_t) > 0$$) then the ray was previously travelling in a vacuum (i.e. index of refraction = 1.0). If $$\cos(\theta_t) < 0$$, then `in_dir` is **leaving** the surface and entering a vacuum.
 
 Finally, when working with Snell's law, there is a special case to account for: total internal reflection. This occurs when a ray hits a refractive boundary at an angle greater than the _critical angle_. The critical angle is the incident \theta_i that causes the refracted \theta_t to be >= 90 degrees, hence can produce no real solution to Snell's Law. In this case, you should set `was_internal` to `true`.
 
-<center><img src="figures\tir_eqns.png" width="200"></center>
+<center>
+$$\eta_i \sin(\theta_i) = \eta_t\sin(\theta_t)$$
+$$\frac{\eta_i\sin(\theta_i)}{\eta_t} = \sin(\theta_t)$$
+$$\frac{\eta_i\sin(\theta_i)}{\eta_t}\overset{?}{\geq} 1$$
+</center>
 
 <center><img src="figures\bsdf_diagrams.png" style="height:200px"></center>
 
@@ -55,29 +60,32 @@ Therefore, we must update our path tracing procedure in `Pathtracer::sample_(in)
 
 Implement `refract` and `BSDF_Glass::scatter()`.
 
-Glass is a material that can both reflect and transmit light. As discussed in class, the fraction of light that is reflected vs. transmitted is governed by the dielectric (non-conductive) Fresnel equations. To simulate this, we may sample `in_dir` from either reflection or refraction with probability proportional to the Fresnel reflectance. For example, if the Fresnel reflectance is 0.9, then you should generate a reflected ray 90% of the time. Note that instead of computing the full Fresnel equations, you have the option to use [Schlick's approximation](https://en.wikipedia.org/wiki/Schlick's_approximation) instead.
+Glass is a material that can both reflect and transmit light. As discussed in class, the fraction of light that is reflected vs. transmitted is governed by the dielectric (non-conductive) Fresnel equations. To simulate this, we may sample `in_dir` from either reflection or refraction with probability proportional to the Fresnel reflectance. For example, if the Fresnel reflectance is $$0.9$$, then you should generate a reflected ray 90% of the time. Note that instead of computing the full Fresnel equations, you have the option to use [Schlick's approximation](https://en.wikipedia.org/wiki/Schlick's_approximation) instead.
 
-In the description below, <img src="figures/dielectric_eq1.png" width="18"> and <img src="figures/dielectric_eq2.png" width="15"> refer to the index of refraction of the medium containing the incoming ray and the angle of that ray with respect to the boundary surface normal. <img src="figures/dielectric_eq3.png" width="18"> and <img src="figures/dielectric_eq4.png" width="15"> refer to the index of refraction of the new medium and the angle to the boundary normal of the transmitted ray.
+In the description below, $$\eta_i$$ and $$\theta_i$$ refer to the index of refraction of the medium containing the incoming ray and the angle of that ray with respect to the boundary surface normal. $$\eta_t$$ and $$\theta_t$$ refer to the index of refraction of the new medium and the angle to the boundary normal of the transmitted ray.
 
 The Fresnel equations state that reflection from a surface is a function of the surface's index of refraction and the polarity of the incoming light. Since our renderer doesn't account for polarity, we'll apply a common approximation of averaging the reflectance of light polarized in perpendicular and parallel directions:
 
-<img src="figures/dielectric_eq5.png" width="200">
+<center>
+$$F_r = \frac{1}{2}(r^2_{\parallel}+r^2_{\perp})$$
+</center>
 
 The parallel and perpendicular terms are given by:
 
-<img src="figures/dielectric_eq6.png" width="200">
+<center>
+$$r_{\parallel} = \frac{\eta_t\cos(\theta_i) - \eta_i\cos(\theta_t)}{\eta_t\cos(\theta_i)+\eta_i\cos(\theta_t)}$$
+$$r_{\perp} = \frac{\eta_i\cos(\theta_i) - \eta_t\cos(\theta_t)}{\eta_i\cos(\theta_i)+\eta_t\cos(\theta_t)}$$
+</center>
 
-<img src="figures/dielectric_eq7.png" width="200">
+Therefore, for a dielectric material, the fraction of reflected light will be given by $$F_r$$, and the amount of transmitted light will be given by $$1-F_r$$.
 
-Therefore, for a dielectric material, the fraction of reflected light will be given by <img src="figures/dielectric_eq8.png" width="18">, and the amount of transmitted light will be given by <img src="figures/dielectric_eq9.png" width="50">.
-
-Alternatively, you may compute <img src="figures/dielectric_eq8.png" width="18"> using [Schlick's approximation](https://en.wikipedia.org/wiki/Schlick%27s_approximation).
+Alternatively, you may compute $$F_r$$ using [Schlick's approximation](https://en.wikipedia.org/wiki/Schlick%27s_approximation).
 
 ### Distribution Function for Transmitted Light
 
 Although we described the BRDF for perfect specular reflection in class, we did not discuss the distribution function for transmitted light. Unlike reflection, refraction "spreads" or "condenses" a differential beam of light. Hence, a refraction event should change the radiance along a ray.
 
-After using Snell's Law to find the direction of refracted rays, compute the BSDF attenuation using the distribution function found in Pharr, Jakob, and and Humphries's book [Physically Based Rendering](http://www.pbr-book.org/3ed-2018/Reflection_Models/Specular_Reflection_and_Transmission.html). It also includes a derivation based Snell's Law and the relation <img src="figures/dielectric_eq10.png" width="150">. Of course, you are more than welcome to attempt a derivation on your own!
+After using Snell's Law to find the direction of refracted rays, compute the BSDF attenuation using the distribution function found in Pharr, Jakob, and and Humphries's book [Physically Based Rendering](http://www.pbr-book.org/3ed-2018/Reflection_Models/Specular_Reflection_and_Transmission.html). It also includes a derivation based Snell's Law and the relation $$d\Phi_t = (1-F_r)d\Phi_i$$. Of course, you are more than welcome to attempt a derivation on your own!
 
 ---
 

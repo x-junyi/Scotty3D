@@ -5,6 +5,7 @@ parent: "A3: Pathtracer"
 permalink: /pathtracer/environment_lighting
 has_children: false
 has_toc: false
+usemathjax: true
 ---
 
 # (Task 7) Environment Lighting
@@ -14,13 +15,15 @@ has_toc: false
     <source src="videos/Task7_EnvMap.mp4" type="video/mp4">
 </video>
 
-The final task of this assignment will be to implement a new type of light source: an infinite environment light. An environment light is a light that supplies incident radiance (really, the light intensity dPhi/dOmega) from all directions on the sphere. Rather than using a predefined collection of explicit lights, an environment light is a capture of the actual incoming light from some real-world scene; rendering using environment lighting can be quite striking.
+The final task of this assignment will be to implement a new type of light source: an infinite environment light. An environment light is a light that supplies incident radiance (really, the light intensity $$\frac{d\Phi}{d\Omega}$$) from all directions on the sphere. Rather than using a predefined collection of explicit lights, an environment light is a capture of the actual incoming light from some real-world scene; rendering using environment lighting can be quite striking.
 
 The intensity of incoming light from each direction is defined by a texture map parameterized by phi and theta, as shown below.
 
 ![envmap_figure](figures/envmap_figure.jpg)
 
 In this task you will implement `Env_Map::sample`, `Env_Map::pdf`, and `Env_Map::evaluate` in `student/env_light.cpp`. You'll start with uniform sampling to get things working, and then move onto a more advanced implementation that uses **importance sampling** to significantly reduce variance in rendered images.
+
+Note that for the purposes of this task, (0,0) is actually the **bottom left** of the HDR image, not the **top left**. Think about how this will affect your calculation of the $$\theta$$ value for a pixel.
 
 ---
 
@@ -45,7 +48,7 @@ Much like light in the real world, most of the energy provided by an environment
 
 The basic idea of importance sampling an image is assigning a probability to each pixel based on the total radiance coming from the solid angle it subtends.
 
-A pixel with coordinate <img src="figures/environment_eq1.png" width ="45"> subtends an area <img src="figures/environment_eq2.png" width = "80"> on the unit sphere (where <img src="figures/environment_eq3.png" width = "20"> and <img src="figures/environment_eq4.png" width = "20"> are the angles subtended by each pixel as determined by the resolution of the texture). Thus, the flux through a pixel is proportional to <img src="figures/environment_eq5.png" width = "45">. (Since we are creating a distribution, we only care about the relative flux through each pixel, not the absolute flux.)
+A pixel with coordinate $$\theta = \theta_0$$ subtends an area $$\sin\theta d\theta d\phi$$ on the unit sphere (where $$d\theta$$ and $$d\phi$$ are the angles subtended by each pixel as determined by the resolution of the texture). Thus, the flux through a pixel is proportional to $$L\sin\theta$$. (Since we are creating a distribution, we only care about the relative flux through each pixel, not the absolute flux.)
 
 **Summing the flux for all pixels, then normalizing each such that they sum to one, yields a discrete probability distribution over the pixels where the probability one is chosen is proportional to its flux.**
 
@@ -66,18 +69,18 @@ the unit sphere sampling distribution can be thought of as two separate
 Jacobians: one to a rectilinear projection of the unit sphere, and then the
 second to the unit sphere from the rectilinear projection.
 
-The first Jacobian scales the w x h rectangle to a 2pi x pi
-rectangle, going from (dx, dy) space to (d\phi, d\theta) space.
-Since we have a distribution that integrates to 1 over (w,h), in order to obtain
-a distribution that still integrates to 1 over (2pi, pi), we must multiply by the
-ratio of their areas, i.e. (wh / 2pi^2). This is the first Jacobian.
+The first Jacobian scales the $$w \times h$$ rectangle to a $$2\pi x \pi$$
+rectangle, going from $$(dx, dy)$$ space to $$(d\phi, d\theta)$$ space.
+Since we have a distribution that integrates to 1 over $$(w,h)$$, in order to obtain
+a distribution that still integrates to 1 over $$(2\pi, \pi)$$, we must multiply by the
+ratio of their areas, i.e. $$\frac{wh}{2\pi^2}$$. This is the first Jacobian.
 
 Then in order to go from integrating over the rectilinear projection of the unit
-sphere to the unit sphere, we need to go from integrating over (d\phi, d\theta) to
-solid angle (d\omega). Since we know that d\omega = sin(\theta) d\phi d\theta,
-if we want our new distribution to still integrate to 1, we must divide by sin(\theta), our second Jacobian.
+sphere to the unit sphere, we need to go from integrating over $$(d\phi, d\theta)$$ to
+solid angle $$(d\omega)$$. Since we know that $$d\omega = \sin(\theta) d\phi d\theta$$,
+if we want our new distribution to still integrate to 1, we must divide by $$\sin(\theta)$$, our second Jacobian.
 
-Altogether, the final Jacobian is (wh / 2pi^2 sin(\theta)).
+Altogether, the final Jacobian is $$\frac{wh}{2\pi^2 \sin(\theta)}$$.
 
 ---
 

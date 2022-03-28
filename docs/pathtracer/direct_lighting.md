@@ -3,6 +3,7 @@ layout: default
 title: (Task 6) Direct Lighting
 permalink: /pathtracer/direct_lighting
 parent: "A3: Pathtracer"
+usemathjax: true
 ---
 
 # (Task 6) Direct Lighting 
@@ -38,14 +39,14 @@ Lastly, note that when the true light distribution heavily favors only one strat
 Finally, let's upgrade `Pathtracer::sample_direct_lighting`. Start by reading the following functions:
 - `Pathtracer::sample_area_lights` takes a world-space position, returning a world-space direction pointing towards an area light.
 - `Pathtracer::area_lights_pdf` takes a world-space position and direction, returning the PDF for generating the direction at the point from the area lights in the scene.
-
+Note that these area light functions operate in **world space**, while BSDF functions operate in **local space**, relative to the surface at the ray intersection point. Pay close attention to the inputs and outputs of each of these functions, and make sure to look at what attributes you have available to you as part of the `Pathtracer::Shading_Info` struct.
 The direct lighting procedure should now follow these steps:
 
 - If the BSDF is discrete, we don't need to bother sampling lights: the behavior should be the same as task 4.
 
 - Otherwise, we should randomly choose whether we get our sample from `BSDF::scatter` or `Pathtracer::sample_area_lights`. Choose between the strategies with equal probability.
 
-- Create a new world-space ray (the "shadow ray") and call `Pathtracer::trace` to get incoming light. You should modify time_bounds so that the ray does not intersect at time = 0. We are still only interested in the emissive component, so the ray depth can be zero.
+- Create a new world-space ray (the "shadow ray") and call `Pathtracer::trace` to get incoming light. You should modify `Ray::dist_bounds` so that the ray does not intersect at time = 0. We are still only interested in the emissive component, so the ray depth can be zero.
 
 - Add estimate of incoming light scaled by BSDF attenuation. Given a sample, we don't know whether it came from the BSDF or the light, so you should use `BSDF::evaluate`, `BSDF::pdf`, and `Pathtracer::area_lights_pdf` to compute the proper weighting. What is the PDF of our sample, given it comes from the combined distribution?
 
