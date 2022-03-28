@@ -69,7 +69,7 @@ the unit sphere sampling distribution can be thought of as two separate
 Jacobians: one to a rectilinear projection of the unit sphere, and then the
 second to the unit sphere from the rectilinear projection.
 
-The first Jacobian scales the $$w \times h$$ rectangle to a $$2\pi x \pi$$
+The first Jacobian scales the $$w \times h$$ rectangle to a $$2\pi \times \pi$$
 rectangle, going from $$(dx, dy)$$ space to $$(d\phi, d\theta)$$ space.
 Since we have a distribution that integrates to 1 over $$(w,h)$$, in order to obtain
 a distribution that still integrates to 1 over $$(2\pi, \pi)$$, we must multiply by the
