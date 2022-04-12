@@ -77,7 +77,7 @@ Once we have two or more knots, interpolation can be handled using general-purpo
 
 An important thing to keep in mind is that `Spline::cubic_unit_spline()` assumes that the time value $$t$$ is between $$0$$ and $$1$$, whereas the distance between two knots on our Catmull-Rom spline can be arbitrary. Therefore, when calling this subroutine you will have to normalize $$t$$ such that it is between $$0$$ and $$1$$, i.e., you will have to divide by the length of the current interval over which you are interpolating. You should think very carefully about how this normalization affects the value computed by the subroutine, in comparison to the values we want to return. A transformation is necessary for both the tangents that you feed in to specify the unit spline. Refer to the wikipedia or course slides for more information if you're stuck.
 
-Internally, a Spline object stores its data in an STL map that maps knot times to knot values. A nice thing about an STL map is that it automatically keeps knots in sorted order. Therefore, we can quickly access the knot closest to a given time using the method [`map::upper_bound()`](https://www.cplusplus.com/reference/algorithm/upper_bound/), which returns an iterator to knot with the smallest time greater than the given query time.
+Internally, a Spline object stores its data in an STL map that maps knot times to knot values. A nice thing about an STL map is that it automatically keeps knots in sorted order. Therefore, we can quickly access the knot closest to a given time using the method [`map::upper_bound()`](https://en.cppreference.com/w/cpp/container/map/upper_bound), which returns an iterator to knot with the smallest time greater than the given query time.
 
 ### Using the splines
 
