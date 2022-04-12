@@ -54,7 +54,7 @@ $$m_0 = \frac{p_2 - p_0}{t_2 - t_0}$$
 
 $$m_1 = \frac{p_3 - p_1}{t_3 - t_1}$$
 
-In other words, a reasonable guess for the tangent is given by the difference between neighboring points. (See the [Wikipedia](https://en.wikipedia.org/wiki/Cubic_Hermite_spline#Catmull–Rom_spline) and our [course slides](http://15462.courses.cs.cmu.edu/spring2021/lecture/anim/slide_044) for more details.)
+In other words, a reasonable guess for the tangent is given by the difference between neighboring points. (See the [Wikipedia](https://en.wikipedia.org/wiki/Cubic_Hermite_spline#Interpolation_on_an_arbitrary_interval) and our [course slides](http://15462.courses.cs.cmu.edu/spring2021/lecture/anim/slide_044) for more details.)
 
 <center><img src="task1_media/spline_diagram.jpg" style="height:240px"> <br/></center>
 
