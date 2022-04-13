@@ -50,9 +50,9 @@ $$t_0 < t_1 \leq t < t_2 < t_3$$
 
 We then use $$t_1$$ and $$t_2$$ as the endpoints of our cubic "piece," and for tangents we use the values
 
-$$m_0 = \frac{p_2 - p_0}{t_2 - t_0}$$
+$$m_1 = \frac{p_2 - p_0}{t_2 - t_0}$$
 
-$$m_1 = \frac{p_3 - p_1}{t_3 - t_1}$$
+$$m_2 = \frac{p_3 - p_1}{t_3 - t_1}$$
 
 In other words, a reasonable guess for the tangent is given by the difference between neighboring points. (See the [Wikipedia](https://en.wikipedia.org/wiki/Cubic_Hermite_spline#Interpolation_on_an_arbitrary_interval) and our [course slides](http://15462.courses.cs.cmu.edu/spring2021/lecture/anim/slide_044) for more details.)
 
