@@ -44,7 +44,7 @@ You will need to implement the following routines in `student/skeleton.cpp` for 
     Return a matrix transforming points in the joint space of this joint to points in skeleton space in posed position but with the base position of the skeleton taken in to account. Hint: use some function that you have implemented wisely!
 
 
-Once you have implemented these basic kinematics, you should be able to define skeletons, set their positions at a collection of keyframes, and watch the skeleton smoothly interpolate the motion (see the [user guide](../guide/animate.md) for an explanation of the interface). The gif below shows a very hasty demo defining a few joints and interpolating their motion.
+Once you have implemented these basic kinematics, you should be able to define skeletons, set their positions at a collection of keyframes, and watch the skeleton smoothly interpolate the motion (see the [user guide](../guide/animate_mode) for an explanation of the interface). The gif below shows a very hasty demo defining a few joints and interpolating their motion.
 
 <center><img src="task2_media/gif1.gif"></center>
 <center><img src="task2_media/gif2.gif"></center>
@@ -109,4 +109,4 @@ A key thing for this part is to _remember what coordinate frame you're in_, beca
 ### Using your IK!
 Once you have IK implemented, you should be able to create a series of joints, and get a particular joint to move to the desired final position you have selected.
 
-Please refer to the [User Guide](/Scotty3D/guide/animate_mode) for more examples
+Please refer to the [User Guide](../guide/animate_mode) for more examples
