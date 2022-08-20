@@ -183,8 +183,77 @@ std::optional<Halfedge_Mesh::EdgeRef> Halfedge_Mesh::flip_edge(Halfedge_Mesh::Ed
 */
 std::optional<Halfedge_Mesh::VertexRef> Halfedge_Mesh::split_edge(Halfedge_Mesh::EdgeRef e) {
 
-    (void)e;
-    return std::nullopt;
+    // collect elements
+    auto h0 = e->halfedge();
+    auto h1 = h0->twin();
+    auto h2 = h0->next();
+    auto h3 = h1->next();
+    auto h4 = h2->next();
+    auto h5 = h3->next();
+
+    auto v0 = h0->vertex();
+    auto v1 = h1->vertex();
+    auto v2 = h4->vertex();
+    auto v3 = h5->vertex();
+
+    auto e1 = h2->edge();
+    auto e2 = h3->edge();
+    auto e3 = h4->edge();
+    auto e4 = h5->edge();
+
+    auto f0 = h0->face();
+    auto f1 = h1->face();
+
+    // triangle meshes only
+    if(f0->degree() != 3 || f1->degree() != 3) {
+        return std::nullopt;
+    }
+
+    // allocate new elements
+    auto h6 = new_halfedge();
+    auto h7 = new_halfedge();
+    auto h8 = new_halfedge();
+    auto h9 = new_halfedge();
+    auto h10 = new_halfedge();
+    auto h11 = new_halfedge();
+
+    auto v4 = new_vertex();
+
+    auto e5 = new_edge();
+    auto e6 = new_edge();
+    auto e7 = new_edge();
+
+    auto f2 = new_face();
+    auto f3 = new_face();
+
+    // reassign elements
+    h0->set_neighbors(h8, h10, v0, e, f0);
+    h1->set_neighbors(h9, h11, v1, e5, f1);
+    h2->set_neighbors(h6, h2->twin(), v1, e1, f2);
+    h3->set_neighbors(h7, h3->twin(), v0, e2, f3);
+    h4->set_neighbors(h0, h4->twin(), v2, e3, f0);
+    h5->set_neighbors(h1, h5->twin(), v3, e4, f1);
+    h6->set_neighbors(h11, h8, v2, e6, f2);
+    h7->set_neighbors(h10, h9, v3, e7, f3);
+    h8->set_neighbors(h4, h6, v4, e6, f0);
+    h9->set_neighbors(h5, h7, v4, e7, f1);
+    h10->set_neighbors(h3, h0, v4, e, f3);
+    h11->set_neighbors(h2, h1, v4, e5, f2);
+
+    v4->halfedge() = h10;
+    v4->pos = (v0->center() + v1->center()) / 2;
+
+    e->halfedge() = h0;
+    e5->halfedge() = h1;
+    e6->halfedge() = h6;
+    e7->halfedge() = h7;
+
+    f0->halfedge() = h0;
+    f1->halfedge() = h1;
+    f2->halfedge() = h2;
+    f3->halfedge() = h3;
+
+    return v4;
 }
 
 
