@@ -137,8 +137,43 @@ std::optional<Halfedge_Mesh::VertexRef> Halfedge_Mesh::collapse_face(Halfedge_Me
 */
 std::optional<Halfedge_Mesh::EdgeRef> Halfedge_Mesh::flip_edge(Halfedge_Mesh::EdgeRef e) {
 
-    (void)e;
-    return std::nullopt;
+    if(e->on_boundary()) return std::nullopt;
+
+    auto h0 = e->halfedge();
+    auto h1 = h0->twin();
+    auto h2 = h0->next();
+    auto h3 = h1->next();
+    auto h4 = h2->next();
+    auto h5 = h3->next();
+    auto h6 = h4;
+    while(h6->next() != h0) h6 = h6->next();
+    auto h7 = h5;
+    while(h7->next() != h1) h7 = h7->next();
+
+    auto v0 = h0->vertex();
+    auto v1 = h2->vertex();
+    auto v2 = h4->vertex();
+    auto v3 = h5->vertex();
+
+    auto f0 = h0->face();
+    auto f1 = h1->face();
+
+    h0->set_neighbors(h4, h1, v3, e, f0);
+    h1->set_neighbors(h5, h0, v2, e, f1);
+    h2->next() = h1;
+    h2->face() = f1;
+    h3->next() = h0;
+    h3->face() = f0;
+    h6->next() = h3;
+    h7->next() = h2;
+
+    v0->halfedge() = h3;
+    v1->halfedge() = h2;
+
+    f0->halfedge() = h0;
+    f1->halfedge() = h1;
+
+    return e;
 }
 
 /*
