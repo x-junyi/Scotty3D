@@ -117,8 +117,79 @@ std::optional<Halfedge_Mesh::FaceRef> Halfedge_Mesh::erase_edge(Halfedge_Mesh::E
 */
 std::optional<Halfedge_Mesh::VertexRef> Halfedge_Mesh::collapse_edge(Halfedge_Mesh::EdgeRef e) {
 
-    (void)e;
-    return std::nullopt;
+    // collect elements
+    auto h0 = e->halfedge();
+    auto h1 = h0->twin();
+    auto h2 = h0->next();
+    auto h3 = h1->next();
+    auto h4 = h2;
+    while(h4->next() != h0) h4 = h4->next();
+    auto h5 = h3;
+    while(h5->next() != h1) h5 = h5->next();
+    auto h6 = h2->twin();
+    auto h7 = h3->twin();
+    auto h8 = h4->twin();
+    auto h9 = h5->twin();
+
+    auto v0 = h0->vertex();
+    auto v1 = h2->vertex();
+    auto v2 = h4->vertex();
+    auto v3 = h5->vertex();
+
+    auto e1 = h2->edge();
+    auto e2 = h3->edge();
+    auto e3 = h4->edge();
+    auto e4 = h5->edge();
+
+    auto f0 = h0->face();
+    auto f1 = h1->face();
+
+    // reassign elements
+    h2->vertex() = v0;
+    h4->next() = h2;
+    h5->next() = h3;
+    for(auto h = h2->twin()->next(); h != h3; h = h->twin()->next()) {
+        h->vertex() = v0;
+    }
+
+    v0->halfedge() = h8;
+    v0->pos = (v0->pos + v1->pos) / 2;
+
+    f0->halfedge() = h2;
+    f1->halfedge() = h3;
+
+    // delete unused elements
+    erase(h0);
+    erase(h1);
+    erase(v1);
+    erase(e);
+
+    // handle face with degree less than 3 after collapse
+    if(f0->degree() < 3) {
+        h6->twin() = h8;
+        h6->edge() = e3;
+        h8->twin() = h6;
+        v2->halfedge() = h6;
+        e3->halfedge() = h6;
+        erase(h2);
+        erase(h4);
+        erase(e1);
+        erase(f0);
+    }
+
+    if(f1->degree() < 3) {
+        h7->twin() = h9;
+        h7->edge() = e4;
+        h9->twin() = h7;
+        v3->halfedge() = h7;
+        e4->halfedge() = h7;
+        erase(h3);
+        erase(h5);
+        erase(e2);
+        erase(f1);
+    }
+
+    return v0;
 }
 
 /*
