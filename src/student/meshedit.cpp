@@ -422,13 +422,58 @@ std::optional<Halfedge_Mesh::FaceRef> Halfedge_Mesh::bevel_edge(Halfedge_Mesh::E
     Halfedge_Mesh::bevel_face_positions (which you also have to
     implement!)
 */
-std::optional<Halfedge_Mesh::FaceRef> Halfedge_Mesh::bevel_face(Halfedge_Mesh::FaceRef f) {
+std::optional<Halfedge_Mesh::FaceRef> Halfedge_Mesh::bevel_face(Halfedge_Mesh::FaceRef f0) {
 
     // Reminder: You should set the positions of new vertices (v->pos) to be exactly
     // the same as wherever they "started from."
 
-    (void)f;
-    return std::nullopt;
+    int d = 1;
+    std::vector<HalfedgeRef> old_h{f0->halfedge()};
+    while(old_h.back()->next() != old_h.front()) {
+        old_h.emplace_back(old_h.back()->next());
+        ++d;
+    }
+
+    std::vector<HalfedgeRef> h(4 * d);
+    std::vector<VertexRef> v(d);
+    std::vector<EdgeRef> e(2 * d);
+    std::vector<FaceRef> f(d);
+
+    for(int i = 0; i < d; ++i) {
+        h[4 * i] = new_halfedge();
+        h[4 * i + 1] = new_halfedge();
+        h[4 * i + 2] = new_halfedge();
+        h[4 * i + 3] = new_halfedge();
+        v[i] = new_vertex();
+        e[2 * i] = new_edge();
+        e[2 * i + 1] = new_edge();
+        f[i] = new_face();
+    }
+
+    for(int b = 0; b < d; ++b) {
+        auto a = (b + d - 1) % d;
+        auto c = (b + 1) % d;
+
+        auto h0 = old_h[b];
+        auto v0 = h0->vertex();
+        auto v1 = old_h[c]->vertex();
+        auto e0 = h0->edge();
+
+        h0->set_neighbors(h[4 * b], h0->twin(), v0, e0, f[b]);
+        h[4 * b]->set_neighbors(h[4 * b + 1], h[4 * c + 2], v1, e[2 * b], f[b]);
+        h[4 * b + 1]->set_neighbors(h[4 * b + 2], h[4 * b + 3], v[c], e[2 * b + 1], f[b]);
+        h[4 * b + 2]->set_neighbors(h0, h[4 * a], v[b], e[2 * a], f[b]);
+        h[4 * b + 3]->set_neighbors(h[4 * c + 3], h[4 * b + 1], v[b], e[2 * b + 1], f0);
+        v[b]->halfedge() = h[4 * b + 3];
+        v[b]->pos = v0->pos;
+        e[2 * b]->halfedge() = h[4 * b];
+        e[2 * b + 1]->halfedge() = h[4 * b + 1];
+        f[b]->halfedge() = h0;
+    }
+
+    f0->halfedge() = h[3];
+
+    return f0;
 }
 
 /*
@@ -526,11 +571,22 @@ void Halfedge_Mesh::bevel_face_positions(const std::vector<Vec3>& start_position
         h = h->next();
     } while(h != face->halfedge());
 
-    (void)new_halfedges;
-    (void)start_positions;
-    (void)face;
-    (void)tangent_offset;
-    (void)normal_offset;
+    auto d = new_halfedges.size();
+    Vec3 normal_vec{};
+    for(int i = 0; i < d; ++i) {
+        Vec3 pi = start_positions[i];
+        Vec3 pj = start_positions[(i + 1) % d];
+        normal_vec += cross(pi, pj);
+    }
+    normal_vec.normalize();
+
+    for(uint32_t b = 0; b < d; ++b) {
+        auto a = (b + d - 1) % d;
+        auto c = (b + 1) % d;
+        auto tangent_vec = start_positions[a] + start_positions[c] - 2 * start_positions[b];
+        new_halfedges[b]->vertex()->pos =
+            start_positions[b] - (tangent_offset * tangent_vec + normal_offset * normal_vec);
+    }
 }
 
 /*
