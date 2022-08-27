@@ -607,6 +607,60 @@ void Halfedge_Mesh::extrude_vertex_position(const Vec3& start_positions, Halfedg
 void Halfedge_Mesh::triangulate() {
 
     // For each face...
+    auto n_triangulation = n_faces();
+    auto face = faces_begin();
+    std::vector<HalfedgeRef> face_halfedges;
+    while(n_triangulation--) {
+        if(face->degree() <= 3) continue;
+
+        auto h = face->halfedge();
+        do {
+            face_halfedges.push_back(h);
+            h = h->next();
+        } while(h != face->halfedge());
+
+        auto n = face_halfedges.size() - 1;
+        auto m = n * 0;
+
+        while(m + 2 < n) {
+            auto a = n;
+            if((n + m) % 2) {
+                a = n;
+                m++;
+            } else {
+                a = n - 1;
+                n--;
+            }
+
+            auto h0 = face_halfedges[a];
+            if(h0->face() != face) h0 = h0->next()->next()->twin();
+            auto h1 = h0->next();
+            auto h2 = h1->next();
+            auto h3 = face_halfedges[a - 1];
+            auto v0 = h0->vertex();
+            auto v1 = h1->vertex();
+            auto v2 = h2->vertex();
+            auto f0 = face;
+
+            auto h4 = new_halfedge();
+            auto h5 = new_halfedge();
+            auto e0 = new_edge();
+            auto f1 = new_face();
+
+            h0->face() = f1;
+            h1->next() = h4;
+            h1->face() = f1;
+            h3->next() = h5;
+            h4->set_neighbors(h0, h5, v2, e0, f1);
+            h5->set_neighbors(h2, h4, v0, e0, f0);
+
+            e0->halfedge() = h4;
+            f0->halfedge() = h5;
+            f1->halfedge() = h4;
+        }
+        face_halfedges.clear();
+        ++face;
+    }
 }
 
 /* Note on the quad subdivision process:
