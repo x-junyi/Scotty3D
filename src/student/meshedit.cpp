@@ -144,6 +144,14 @@ std::optional<Halfedge_Mesh::VertexRef> Halfedge_Mesh::collapse_edge(Halfedge_Me
     auto f0 = h0->face();
     auto f1 = h1->face();
 
+    if(v2 == v3) return std::nullopt;
+
+    for(auto hi = h2->twin()->next(); hi->twin() != h5; hi = hi->twin()->next()) {
+        for(auto hj = h3->twin()->next(); hj->twin() != h4; hj = hj->twin()->next()) {
+            if(hi->twin()->vertex() == hj->twin()->vertex()) return std::nullopt;
+        }
+    }
+
     // reassign elements
     h2->vertex() = v0;
     h4->next() = h2;
