@@ -879,6 +879,29 @@ struct Edge_Record {
         //    Edge_Record::optimal.
         // -> Also store the cost associated with collapsing this edge in
         //    Edge_Record::cost.
+        auto v0 = e->halfedge()->vertex();
+        auto v1 = e->halfedge()->twin()->vertex();
+        auto K = vertex_quadrics[e->halfedge()->vertex()] +
+                 vertex_quadrics[e->halfedge()->twin()->vertex()];
+        auto A = K;
+        auto b = -K[3].xyz();
+        for(int i = 0; i < 3; ++i) {
+            A[3][i] = A[i][3] = 0.0f;
+        }
+        A[3][3] = 1.0f;
+
+        if(abs(A.det()) < 1e4 * std::numeric_limits<float>::epsilon()) {
+            auto cost0 = dot(Vec4(v0->pos, 1.0f), (K * Vec4(v0->pos, 1.0f)));
+            auto cost1 = dot(Vec4(v1->pos, 1.0f), (K * Vec4(v1->pos, 1.0f)));
+            if(cost0 < cost1) {
+                optimal = v0->pos;
+            } else {
+                optimal = v1->pos;
+            }
+        } else {
+            optimal = A.inverse() * b;
+        }
+        cost = dot(Vec4(optimal, 1.0f), (K * Vec4(optimal, 1.0f)));
     }
     Halfedge_Mesh::EdgeRef edge;
     Vec3 optimal;
@@ -983,6 +1006,7 @@ bool Halfedge_Mesh::simplify() {
     std::unordered_map<FaceRef, Mat4> face_quadrics;
     std::unordered_map<EdgeRef, Edge_Record> edge_records;
     PQueue<Edge_Record> edge_queue;
+    std::unordered_map<EdgeRef, bool> edge_skipped;
 
     // Compute initial quadrics for each face by simply writing the plane equation
     // for the face in homogeneous coordinates. These quadrics should be stored
@@ -1006,5 +1030,98 @@ bool Halfedge_Mesh::simplify() {
     // but here simply calling collapse_edge() will not erase the elements.
     // You should use collapse_edge_erase() instead for the desired behavior.
 
-    return false;
+    auto target_faces_number = faces.size() / 5;
+    if(target_faces_number <= 0) return false;
+    target_faces_number = std::max(target_faces_number, 2ull);
+
+    for(auto f = faces_begin(); f != faces_end(); ++f) {
+        auto N = f->normal();
+        auto p = f->halfedge()->vertex()->pos;
+        auto d = -dot(N, p);
+        auto v = Vec4(N, d);
+        face_quadrics[f] = outer(v, v);
+    }
+
+    for(auto v = vertices_begin(); v != vertices_end(); ++v) {
+        auto K = Mat4::Zero;
+        auto h = v->halfedge();
+        do {
+            K += face_quadrics[h->face()];
+            h = h->twin()->next();
+        } while(h != v->halfedge());
+        vertex_quadrics[v] = K;
+    }
+
+    for(auto e = edges_begin(); e != edges_end(); ++e) {
+        Edge_Record r(vertex_quadrics, e);
+        edge_records[e] = r;
+        edge_queue.insert(r);
+        edge_skipped[e] = false;
+    }
+
+    while(faces.size() > target_faces_number && !edge_queue.queue.empty()) {
+        auto record = edge_queue.top();
+        edge_queue.pop();
+        auto e0 = record.edge;
+        auto h0 = e0->halfedge();
+        auto v0 = h0->vertex();
+        auto v1 = h0->twin()->vertex();
+        auto new_K = vertex_quadrics[v0] + vertex_quadrics[v1];
+
+        auto h_tmp = v0->halfedge();
+        do {
+            edge_queue.remove(edge_records[h_tmp->edge()]);
+            h_tmp = h_tmp->twin()->next();
+        } while(h_tmp != v0->halfedge());
+
+        h_tmp = v1->halfedge();
+        do {
+            edge_queue.remove(edge_records[h_tmp->edge()]);
+            h_tmp = h_tmp->twin()->next();
+        } while(h_tmp != v1->halfedge());
+
+        auto v2_op = collapse_edge_erase(e0);
+        if(!v2_op.has_value()) {
+            edge_skipped[e0] = true;
+            h_tmp = v0->halfedge();
+            do {
+                if(edge_skipped[h_tmp->edge()]) {
+                    h_tmp = h_tmp->twin()->next();
+                    continue;
+                }
+                Edge_Record r(vertex_quadrics, h_tmp->edge());
+                edge_queue.insert(r);
+                edge_records[h_tmp->edge()] = r;
+                h_tmp = h_tmp->twin()->next();
+            } while(h_tmp != v0->halfedge());
+
+            h_tmp = v1->halfedge();
+            do {
+                if(edge_skipped[h_tmp->edge()]) {
+                    h_tmp = h_tmp->twin()->next();
+                    continue;
+                }
+                Edge_Record r(vertex_quadrics, h_tmp->edge());
+                edge_queue.insert(r);
+                edge_records[h_tmp->edge()] = r;
+                h_tmp = h_tmp->twin()->next();
+            } while(h_tmp != v1->halfedge());
+
+            continue;
+        }
+
+        auto v2 = v2_op.value();
+        v2->pos = record.optimal;
+        vertex_quadrics[v2] = new_K;
+
+        h_tmp = v2->halfedge();
+        do {
+            Edge_Record r(vertex_quadrics, h_tmp->edge());
+            edge_queue.insert(r);
+            edge_records[h_tmp->edge()] = r;
+            h_tmp = h_tmp->twin()->next();
+        } while(h_tmp != v2->halfedge());
+    }
+
+    return true;
 }
