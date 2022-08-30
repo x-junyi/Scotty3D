@@ -581,7 +581,7 @@ void Halfedge_Mesh::bevel_face_positions(const std::vector<Vec3>& start_position
 
     auto d = new_halfedges.size();
     Vec3 normal_vec{};
-    for(int i = 0; i < d; ++i) {
+    for(auto i = d * 0; i < d; ++i) {
         Vec3 pi = start_positions[i];
         Vec3 pj = start_positions[(i + 1) % d];
         normal_vec += cross(pi, pj);
@@ -646,7 +646,7 @@ void Halfedge_Mesh::triangulate() {
             auto h2 = h1->next();
             auto h3 = face_halfedges[a - 1];
             auto v0 = h0->vertex();
-            auto v1 = h1->vertex();
+//            auto v1 = h1->vertex();
             auto v2 = h2->vertex();
             auto f0 = face;
 
@@ -890,7 +890,7 @@ struct Edge_Record {
         }
         A[3][3] = 1.0f;
 
-        if(abs(A.det()) < 1e4 * std::numeric_limits<float>::epsilon()) {
+        if(std::abs(A.det()) < 1e4 * std::numeric_limits<float>::epsilon()) {
             auto cost0 = dot(Vec4(v0->pos, 1.0f), (K * Vec4(v0->pos, 1.0f)));
             auto cost1 = dot(Vec4(v1->pos, 1.0f), (K * Vec4(v1->pos, 1.0f)));
             if(cost0 < cost1) {
@@ -1032,7 +1032,7 @@ bool Halfedge_Mesh::simplify() {
 
     auto target_faces_number = faces.size() / 5;
     if(target_faces_number <= 0) return false;
-    target_faces_number = std::max(target_faces_number, 2ull);
+    target_faces_number = std::max(target_faces_number, decltype(target_faces_number)(2));
 
     for(auto f = faces_begin(); f != faces_end(); ++f) {
         auto N = f->normal();
