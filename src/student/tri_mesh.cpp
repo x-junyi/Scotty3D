@@ -22,9 +22,6 @@ Trace Triangle::hit(const Ray& ray) const {
     Tri_Mesh_Vert v_0 = vertex_list[v0];
     Tri_Mesh_Vert v_1 = vertex_list[v1];
     Tri_Mesh_Vert v_2 = vertex_list[v2];
-    (void)v_0;
-    (void)v_1;
-    (void)v_2;
 
     // TODO (PathTracer): Task 2
     // Intersect the ray with the triangle defined by the three vertices.
@@ -36,6 +33,30 @@ Trace Triangle::hit(const Ray& ray) const {
     ret.position = Vec3{}; // where was the intersection?
     ret.normal = Vec3{};   // what was the surface normal at the intersection?
                            // (this should be interpolated between the three vertex normals)
+
+    auto e1 = v_1.position - v_0.position;
+    auto e2 = v_2.position - v_0.position;
+    auto s = ray.point - v_0.position;
+
+    auto divisor = dot(cross(e1, ray.dir), e2);
+    if(std::abs(divisor) < std::numeric_limits<float>::epsilon()) return ret;
+
+    auto uvt =
+        Vec3(-dot(cross(s, e2), ray.dir), dot(cross(e1, ray.dir), s), -dot(cross(s, e2), e1)) /
+        divisor;
+
+    auto u = uvt[0];
+    auto v = uvt[1];
+    auto t = uvt[2];
+
+    if(0.0f <= u && u <= 1.0f && 0.0f <= v && v <= 1.0f && u + v <= 1.0f &&
+       ray.dist_bounds[0] <= t && t <= ray.dist_bounds[1]) {
+        ret.hit = true;
+        ret.distance = t;
+        ret.position = ray.at(t);
+        ret.normal = (1.0f - u - v) * v_0.normal + u * v_1.normal + v * v_2.normal;
+    }
+
     return ret;
 }
 
