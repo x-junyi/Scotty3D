@@ -12,8 +12,11 @@ BBox Triangle::bbox() const {
     // Beware of flat/zero-volume boxes! You may need to
     // account for that here, or later on in BBox::hit.
 
-    BBox box;
-    return box;
+    auto bmin =
+        hmin(vertex_list[v0].position, hmin(vertex_list[v1].position, vertex_list[v2].position));
+    auto bmax =
+        hmax(vertex_list[v0].position, hmax(vertex_list[v1].position, vertex_list[v2].position));
+    return BBox(bmin, bmax);
 }
 
 Trace Triangle::hit(const Ray& ray) const {
