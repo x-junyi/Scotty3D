@@ -1,6 +1,7 @@
 
 #include "../rays/bvh.h"
 #include "debug.h"
+#include <array>
 #include <stack>
 
 namespace PT {
@@ -37,12 +38,82 @@ void BVH<Primitive>::build(std::vector<Primitive>&& prims, size_t max_leaf_size)
     // single leaf node (which is also the root) that encloses all the
     // primitives.
 
-    // Replace these
-    BBox box;
-    for(const Primitive& prim : primitives) box.enclose(prim.bbox());
+    struct Bucket {
+        BBox bbox{};
+        size_t prim_count{};
+    };
 
-    new_node(box, 0, primitives.size(), 0, 0);
-    root_idx = 0;
+    constexpr size_t n_buckets = 8;
+    std::stack<size_t> node_stack;
+    BBox root_box;
+    for(const auto& prim : primitives) root_box.enclose(prim.bbox());
+    root_idx = new_node(root_box, 0, primitives.size(), 0, 0);
+    node_stack.push(root_idx);
+
+    while(!node_stack.empty()) {
+        auto node_idx = node_stack.top();
+        auto& node = nodes[node_idx];
+        node_stack.pop();
+        if(node.size <= max_leaf_size) continue;
+
+        int best_partition_axis{};
+        float best_partition_coord{};
+        float best_partition_cost = std::numeric_limits<float>::max();
+        BBox best_partition_l_bbox{};
+        BBox best_partition_r_bbox{};
+        auto node_end = node.start + node.size;
+
+        for(int axis = 0; axis < 3; ++axis) {
+            std::array<Bucket, n_buckets> buckets{};
+            auto bbox_length = node.bbox.max[axis] - node.bbox.min[axis];
+            for(auto i = node.start; i < node_end; ++i) {
+                auto bidx =
+                    size_t(floor((primitives[i].bbox().center()[axis] - node.bbox.min[axis]) /
+                                 bbox_length * n_buckets));
+                if(bidx == n_buckets) bidx = bidx - 1;
+                buckets[bidx].bbox.enclose(primitives[i].bbox());
+                buckets[bidx].prim_count++;
+            }
+
+            BBox l_bbox{}, r_bbox{};
+            size_t l_cnt{}, r_cnt{};
+            for(int i = 0; i + 1 < n_buckets; ++i) {
+                l_bbox.enclose(buckets[i].bbox);
+                l_cnt += buckets[i].prim_count;
+                r_bbox.reset();
+                r_cnt = 0;
+                for(int j = i + 1; j < n_buckets; ++j) {
+                    r_bbox.enclose(buckets[j].bbox);
+                    r_cnt += buckets[j].prim_count;
+                }
+                auto cost =
+                    (l_bbox.surface_area() * float(l_cnt) + r_bbox.surface_area() * float(r_cnt));
+                if(cost < best_partition_cost) {
+                    best_partition_axis = axis;
+                    best_partition_cost = cost;
+                    best_partition_coord =
+                        node.bbox.min[axis] + (float(i) + 1.0f) * bbox_length / n_buckets;
+                }
+            }
+        }
+
+        size_t bound =
+            std::partition(primitives.begin() + node.start, primitives.begin() + node_end,
+                           [best_partition_axis = best_partition_axis,
+                            best_partition_coord = best_partition_coord](const Primitive& p) {
+                               return p.bbox().center()[best_partition_axis] < best_partition_coord;
+                           }) -
+            primitives.begin();
+        if(node.start == bound || bound == node_end) continue;
+
+        for(auto i = node.start; i < bound; ++i)
+            best_partition_l_bbox.enclose(primitives[i].bbox());
+        for(auto i = bound; i < node_end; ++i) best_partition_r_bbox.enclose(primitives[i].bbox());
+        nodes[node_idx].l = new_node(best_partition_l_bbox, node.start, bound - node.start, 0, 0);
+        nodes[node_idx].r = new_node(best_partition_r_bbox, bound, node_end - bound, 0, 0);
+        node_stack.push(nodes[node_idx].l);
+        node_stack.push(nodes[node_idx].r);
+    }
 }
 
 template<typename Primitive> Trace BVH<Primitive>::hit(const Ray& ray) const {
