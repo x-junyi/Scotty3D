@@ -34,5 +34,10 @@ bool BBox::hit(const Ray& ray, Vec2& times) const {
     if(tzmin > tmin) tmin = tzmin;
     if(tzmax < tmax) tmax = tzmax;
 
+    tmin = std::max(tmin, ray.dist_bounds.x);
+    tmax = std::min(tmax, ray.dist_bounds.y);
+
+    if(tmax < tmin) return false;
+
     return true;
 }

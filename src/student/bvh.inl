@@ -127,9 +127,40 @@ template<typename Primitive> Trace BVH<Primitive>::hit(const Ray& ray) const {
     // Again, remember you can use hit() on any Primitive value.
 
     Trace ret;
-    for(const Primitive& prim : primitives) {
-        Trace hit = prim.hit(ray);
-        ret = Trace::min(ret, hit);
+    std::stack<size_t> node_stack;
+    node_stack.push(root_idx);
+
+    while(!node_stack.empty()) {
+        auto node_idx = node_stack.top();
+        node_stack.pop();
+        auto& node = nodes[node_idx];
+
+        Vec2 times0{};
+        auto hit0 = node.bbox.hit(ray, times0);
+        if(!hit0 || (ret.hit && ret.distance <= times0.x)) continue;
+
+        if(node.is_leaf()) {
+            auto node_end = node.start + node.size;
+            for(auto i = node.start; i < node_end; ++i) {
+                Trace hit = primitives[i].hit(ray);
+                ret = Trace::min(ret, hit);
+            }
+        } else {
+            Vec2 times1, times2;
+            auto hit1 = nodes[node.l].bbox.hit(ray, times1);
+            auto hit2 = nodes[node.r].bbox.hit(ray, times2);
+
+            if(hit1 && hit2) {
+                auto first = times1.x < times2.x ? node.l : node.r;
+                auto second = times1.x < times2.x ? node.r : node.l;
+                node_stack.push(first);
+                node_stack.push(second);
+            } else if(hit1) {
+                node_stack.push(node.l);
+            } else if(hit2) {
+                node_stack.push(node.r);
+            }
+        }
     }
     return ret;
 }
