@@ -4,7 +4,7 @@
 #include "../util/rand.h"
 #include "debug.h"
 
-#define TASK_4 0
+#define TASK_4 1
 #define TASK_6 0
 
 namespace PT {
@@ -54,8 +54,14 @@ Spectrum Pathtracer::sample_indirect_lighting(const Shading_Info& hit) {
     // by Pathtracer::trace()), as the direct component will be computed in
     // Pathtracer::sample_direct_lighting().
 
-    Spectrum radiance;
-    return radiance;
+    auto scatter = hit.bsdf.scatter(hit.out_dir);
+    Ray ray(hit.pos, hit.object_to_world.rotate(scatter.direction),
+            Vec2{std::numeric_limits<float>::epsilon() * 10, std::numeric_limits<float>::max()},
+            hit.depth - 1);
+    auto res = trace(ray);
+    if(!hit.bsdf.is_discrete())
+        res.second = res.second / hit.bsdf.pdf(hit.out_dir, scatter.direction);
+    return res.second * scatter.attenuation;
 }
 
 Spectrum Pathtracer::sample_direct_lighting(const Shading_Info& hit) {
@@ -75,7 +81,13 @@ Spectrum Pathtracer::sample_direct_lighting(const Shading_Info& hit) {
     // want emissive, we can trace a ray with depth = 0.
 
 #if TASK_4 == 1
-    return radiance
+    auto scatter = hit.bsdf.scatter(hit.out_dir);
+    Ray ray(hit.pos, hit.object_to_world.rotate(scatter.direction),
+            Vec2{std::numeric_limits<float>::epsilon() * 10, std::numeric_limits<float>::max()}, 0);
+    auto res = trace(ray);
+    if(!hit.bsdf.is_discrete())
+        res.first = res.first / hit.bsdf.pdf(hit.out_dir, scatter.direction);
+    radiance += res.first * scatter.attenuation;
 #endif
 
     // TODO (PathTrace): Task 6
@@ -133,7 +145,7 @@ std::pair<Spectrum, Spectrum> Pathtracer::trace(const Ray& ray) {
 
     // TODO (PathTracer): Task 4
     // You will want to change the default normal_colors in debug.h, or delete this early out.
-    if(debug_data.normal_colors) return {Spectrum::direction(result.normal), {}};
+    //    if(debug_data.normal_colors) return {Spectrum::direction(result.normal), {}};
 
     // If the BSDF is emissive, stop tracing and return the emitted light
     Spectrum emissive = bsdf.emissive();
