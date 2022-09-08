@@ -8,7 +8,7 @@ static Vec3 reflect(Vec3 dir) {
 
     // TODO (PathTracer): Task 5
     // Return reflection of dir about the surface normal (0,1,0).
-    return Vec3{};
+    return Vec3{-dir.x, dir.y, -dir.z};
 }
 
 static Vec3 refract(Vec3 out_dir, float index_of_refraction, bool& was_internal) {
@@ -26,7 +26,29 @@ static Vec3 refract(Vec3 out_dir, float index_of_refraction, bool& was_internal)
     // and to do so you can simply find the direction that out_dir would refract
     // _to_, as refraction is symmetric.
 
-    return Vec3{};
+    was_internal = false;
+
+    auto ni = 1.0f;
+    auto nt = index_of_refraction;
+    if(out_dir.y < 0) std::swap(ni, nt);
+
+    auto cos2_theta_i = out_dir.y * out_dir.y;
+
+    auto sin2_theta_t = (ni / nt) * (ni / nt) * (1 - cos2_theta_i);
+    auto cos2_theta_t = 1.0f - sin2_theta_t;
+
+    if(cos2_theta_t < 0) {
+        was_internal = true;
+        return reflect(out_dir);
+    }
+
+    Vec3 in_dir(-out_dir.x, 0.0f, -out_dir.z);
+    in_dir.normalize();
+    in_dir *= std::sqrt(sin2_theta_t);
+    in_dir.y = std::sqrt(cos2_theta_t);
+    if(0 < out_dir.y) in_dir.y = -in_dir.y;
+
+    return in_dir;
 }
 
 Scatter BSDF_Lambertian::scatter(Vec3 out_dir) const {
@@ -65,8 +87,8 @@ Scatter BSDF_Mirror::scatter(Vec3 out_dir) const {
     // TODO (PathTracer): Task 5
 
     Scatter ret;
-    ret.direction = Vec3();
-    ret.attenuation = Spectrum{};
+    ret.direction = reflect(out_dir);
+    ret.attenuation = reflectance;
     return ret;
 }
 
@@ -82,8 +104,30 @@ Scatter BSDF_Glass::scatter(Vec3 out_dir) const {
     // What happens upon total internal reflection?
 
     Scatter ret;
-    ret.direction = Vec3();
-    ret.attenuation = Spectrum{};
+    bool was_internal{};
+    ret.direction = refract(out_dir, index_of_refraction, was_internal);
+    if(was_internal) {
+        ret.attenuation = reflectance;
+        return ret;
+    }
+
+    auto ni = 1.0f;
+    auto nt = index_of_refraction;
+    if(out_dir.y < 0) std::swap(ni, nt);
+
+    auto cos_theta_i = std::abs(out_dir.y);
+    auto cos_theta_t = std::abs(ret.direction.y);
+
+    auto r_para = (nt * cos_theta_i - ni * cos_theta_t) / (nt * cos_theta_i + ni * cos_theta_t);
+    auto r_perp = (ni * cos_theta_i - nt * cos_theta_t) / (ni * cos_theta_i + nt * cos_theta_t);
+    auto F_r = 0.5f * (r_para * r_para + r_perp * r_perp);
+    ret.attenuation = transmittance;
+
+    if(RNG::coin_flip(F_r)) {
+        ret.attenuation = reflectance;
+        ret.direction = reflect(out_dir);
+    }
+
     return ret;
 }
 
@@ -94,8 +138,26 @@ Scatter BSDF_Refract::scatter(Vec3 out_dir) const {
     // When debugging BSDF_Glass, it may be useful to compare to a pure-refraction BSDF
 
     Scatter ret;
-    ret.direction = Vec3();
-    ret.attenuation = Spectrum{};
+    bool was_internal{};
+    ret.direction = refract(out_dir, index_of_refraction, was_internal);
+    if(was_internal) {
+        ret.attenuation = Spectrum(1.0f, 1.0f, 1.0f);
+        return ret;
+    }
+
+    //    auto ni = 1.0f;
+    //    auto nt = index_of_refraction;
+    //    if(out_dir.y < 0) std::swap(ni, nt);
+    //
+    //    auto cos_theta_i = std::abs(out_dir.y);
+    //    auto cos_theta_t = std::abs(ret.direction.y);
+    //
+    //    auto r_para = (nt * cos_theta_i - ni * cos_theta_t) / (nt * cos_theta_i + ni *
+    //    cos_theta_t); auto r_perp = (ni * cos_theta_i - nt * cos_theta_t) / (ni * cos_theta_i + nt
+    //    * cos_theta_t); auto F_r = 0.5f * (r_para * r_para + r_perp * r_perp);
+    ret.attenuation = transmittance;
+    //    ret.attenuation = transmittance * (ni * ni / nt / nt * (1.0f - F_r)) / cos_theta_t;
+
     return ret;
 }
 
