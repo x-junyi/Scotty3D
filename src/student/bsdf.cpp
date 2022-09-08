@@ -8,7 +8,7 @@ static Vec3 reflect(Vec3 dir) {
 
     // TODO (PathTracer): Task 5
     // Return reflection of dir about the surface normal (0,1,0).
-    return Vec3{-dir.x, dir.y, -dir.z};
+    return Vec3{-dir.x, std::abs(dir.y), -dir.z};
 }
 
 static Vec3 refract(Vec3 out_dir, float index_of_refraction, bool& was_internal) {

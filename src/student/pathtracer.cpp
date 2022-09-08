@@ -4,8 +4,8 @@
 #include "../util/rand.h"
 #include "debug.h"
 
-#define TASK_4 1
-#define TASK_6 0
+#define TASK_4 0
+#define TASK_6 1
 
 namespace PT {
 
@@ -15,7 +15,8 @@ Spectrum Pathtracer::trace_pixel(size_t x, size_t y) {
 
     // Generate a ray that uniformly samples pixel (x,y) and return the incoming light.
     // The following code generates a ray at the bottom left of the pixel every time.
-    // You'll need to change this so that it gets a new location each time trace_pixel is called for part 3
+    // You'll need to change this so that it gets a new location each time trace_pixel is called for
+    // part 3
 
     // Tip: Use Rect::sample to get a new location each time trace_pixel is called
     // Tip: log_ray is useful for debugging
@@ -25,7 +26,6 @@ Spectrum Pathtracer::trace_pixel(size_t x, size_t y) {
     Vec2 wh((float)out_w, (float)out_h);
 
     Ray ray = camera.generate_ray(xy / wh);
-    if(RNG::coin_flip(0.0005f)) log_ray(ray, 10.0f);
     ray.depth = max_depth;
 
     // Pathtracer::trace() returns the incoming light split into emissive and reflected components.
@@ -56,7 +56,7 @@ Spectrum Pathtracer::sample_indirect_lighting(const Shading_Info& hit) {
 
     auto scatter = hit.bsdf.scatter(hit.out_dir);
     Ray ray(hit.pos, hit.object_to_world.rotate(scatter.direction),
-            Vec2{std::numeric_limits<float>::epsilon() * 10, std::numeric_limits<float>::max()},
+            Vec2{std::numeric_limits<float>::epsilon() * 1e2f, std::numeric_limits<float>::max()},
             hit.depth - 1);
     auto res = trace(ray);
     if(!hit.bsdf.is_discrete())
@@ -114,7 +114,37 @@ Spectrum Pathtracer::sample_direct_lighting(const Shading_Info& hit) {
     // BSDF::pdf(), and Pathtracer::area_lights_pdf() to compute the proper weighting.
     // What is the PDF of our sample, given it could have been produced from either source?
 #if TASK_6 == 1
-    return radiance
+    if(hit.bsdf.is_discrete()) {
+        auto scatter = hit.bsdf.scatter(hit.out_dir);
+        Ray ray(
+            hit.pos, hit.object_to_world.rotate(scatter.direction),
+            Vec2{std::numeric_limits<float>::epsilon() * 1e2f, std::numeric_limits<float>::max()},
+            0);
+        auto res = trace(ray);
+        radiance += res.first * scatter.attenuation;
+    } else {
+        Ray ray{};
+        Spectrum attenuation{};
+        if(RNG::coin_flip(0.5f)) {
+            auto scatter = hit.bsdf.scatter(hit.out_dir);
+            ray = Ray(hit.pos, hit.object_to_world.rotate(scatter.direction),
+                      Vec2{std::numeric_limits<float>::epsilon() * 1e2f,
+                           std::numeric_limits<float>::max()},
+                      0);
+            attenuation = scatter.attenuation;
+        } else {
+            auto dir = sample_area_lights(hit.pos);
+            ray = Ray(hit.pos, dir,
+                      Vec2{std::numeric_limits<float>::epsilon() * 1e2f,
+                           std::numeric_limits<float>::max()},
+                      0);
+            attenuation = hit.bsdf.evaluate(hit.out_dir, hit.world_to_object.rotate(ray.dir));
+        }
+        auto res = trace(ray);
+        auto pdf = 0.5f * (hit.bsdf.pdf(hit.out_dir, hit.world_to_object.rotate(ray.dir)) +
+                           area_lights_pdf(hit.pos, ray.dir));
+        radiance += res.first * attenuation / pdf;
+    }
 #endif
 
     return radiance;
