@@ -77,12 +77,12 @@ void BVH<Primitive>::build(std::vector<Primitive>&& prims, size_t max_leaf_size)
 
             BBox l_bbox{}, r_bbox{};
             size_t l_cnt{}, r_cnt{};
-            for(int i = 0; i + 1 < n_buckets; ++i) {
+            for(size_t i = 0; i + 1 < n_buckets; ++i) {
                 l_bbox.enclose(buckets[i].bbox);
                 l_cnt += buckets[i].prim_count;
                 r_bbox.reset();
                 r_cnt = 0;
-                for(int j = i + 1; j < n_buckets; ++j) {
+                for(size_t j = i + 1; j < n_buckets; ++j) {
                     r_bbox.enclose(buckets[j].bbox);
                     r_cnt += buckets[j].prim_count;
                 }
