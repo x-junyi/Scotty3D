@@ -21,7 +21,10 @@ Vec3 Sphere::Uniform::sample() const {
     // Generate a uniformly random point on the unit sphere.
     // Tip: start with Hemisphere::Uniform
 
-    return Vec3{};
+    auto dir = hemi.sample();
+    if(RNG::coin_flip(0.5f)) dir.y = -dir.y;
+
+    return dir;
 }
 
 Sphere::Image::Image(const HDR_Image& image) {
@@ -34,6 +37,28 @@ Sphere::Image::Image(const HDR_Image& image) {
     const auto [_w, _h] = image.dimension();
     w = _w;
     h = _h;
+
+    auto n = w * h;
+    _pdf.resize(n);
+    _cdf.resize(n, 0.0f);
+
+    for(size_t j = 0; j < h; ++j) {
+        for(size_t i = 0; i < w; ++i) {
+            _pdf[j * w + i] = image.at(i, j).luma();
+            total += _pdf[j * w + i];
+        }
+    }
+
+    for(size_t j = 0; j < h; ++j) {
+        for(size_t i = 0; i < w; ++i) {
+            auto idx = j * w + i;
+            _pdf[idx] /= total;
+            _cdf[idx] = _pdf[idx];
+            if(idx) {
+                _cdf[idx] += _cdf[idx - 1];
+            }
+        }
+    }
 }
 
 Vec3 Sphere::Image::sample() const {
@@ -43,7 +68,15 @@ Vec3 Sphere::Image::sample() const {
     // Use your importance sampling data structure to generate a sample direction.
     // Tip: std::upper_bound
 
-    return Vec3{};
+    auto xi = RNG::unit();
+    size_t pixel_idx = std::upper_bound(_cdf.begin(), _cdf.end(), xi) - _cdf.begin();
+    pixel_idx = std::clamp(pixel_idx, size_t(0), _cdf.size() - 1);
+    auto x = pixel_idx % w;
+    auto y = pixel_idx / w;
+    auto phi = (float(x) + 0.5f) / float(w) * 2.0f * PI_F;
+    auto theta = (float(y) + 0.5f) / float(h) * PI_F;
+
+    return Vec3{std::cos(phi) * std::sin(theta), -std::cos(theta), std::sin(phi) * std::sin(theta)};
 }
 
 float Sphere::Image::pdf(Vec3 dir) const {
@@ -52,7 +85,20 @@ float Sphere::Image::pdf(Vec3 dir) const {
 
     // What is the PDF of this distribution at a particular direction?
 
-    return 0.0f;
+    dir.y = -dir.y;
+    auto theta = std::acos(dir.y);
+    auto phi = std::atan2(dir.z, dir.x);
+
+    if(phi < 0.0f) phi += 2.0f * PI_F;
+
+    auto x = size_t(phi / (2.0f * PI_F) * float(w));
+    auto y = size_t(theta / PI_F * float(h));
+    x = std::clamp(x, size_t(0), w - 1);
+    y = std::clamp(y, size_t(0), h - 1);
+
+    auto jacobian = float(w * h) / (2.0f * PI_F * PI_F * std::sin(theta));
+
+    return _pdf[y * w + x] * jacobian;
 }
 
 Vec3 Point::sample() const {
